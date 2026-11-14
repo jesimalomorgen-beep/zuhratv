@@ -37,7 +37,7 @@ header{height:15vh;display:flex;align-items:center;justify-content:space-between
 .gear.focus{opacity:1;border-color:var(--gold);background:#ffffff18}
 
 main{flex:1;display:flex;gap:2.4vw;min-height:0}
-#listWrap{width:36%;flex:none;display:flex;flex-direction:column;min-height:0;
+#listWrap{position:relative;width:36%;flex:none;display:flex;flex-direction:column;min-height:0;
   background:linear-gradient(180deg,#2c0f27ee,#1f0a1cee);border:1px solid var(--line);border-radius:2.2vh;overflow:hidden}
 #listHead{flex:none;display:flex;justify-content:space-between;align-items:center;padding:1.7vh 1.5vw;
   font-size:2.4vh;letter-spacing:.35vh;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
@@ -45,7 +45,7 @@ main{flex:1;display:flex;gap:2.4vw;min-height:0}
 #listHead .flag i{display:inline-block;width:3.4vh;height:2.3vh;border-radius:.4vh;overflow:hidden}
 #count{font-weight:700;color:var(--gold)}
 #list{flex:1;overflow:hidden;position:relative}
-#listMsg{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;
+#listMsg{position:absolute;left:0;right:0;top:7vh;bottom:0;z-index:5;display:none;align-items:center;justify-content:center;text-align:center;
   padding:3vh 2vw;font-size:3vh;color:var(--muted);line-height:1.4}
 #listMsg.show{display:flex}
 .row{height:8.2vh;display:flex;align-items:center;gap:1vw;padding:0 1.3vw 0 1vw;font-size:3.3vh;white-space:nowrap;
@@ -381,7 +381,7 @@ function loadChannels(){
   });
 }
 
-function listMsg(html){ var m = $('listMsg'); m.innerHTML = html; m.classList.toggle('show', !!html); }
+function listMsg(html){ var m = $('listMsg'); m.innerHTML = html ? '<div>' + html + '</div>' : ''; m.classList.toggle('show', !!html); }
 
 /* ---------- Senderliste ---------- */
 function initials(n){ return String(n).replace(/[^A-Za-z0-9ČĆŽŠĐčćžšđ ]/g, '').split(/\s+/).filter(Boolean).slice(0, 2).map(function(w){ return w[0]; }).join('').toUpperCase(); }
