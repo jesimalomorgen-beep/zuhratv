@@ -596,6 +596,19 @@ document.addEventListener('visibilitychange', function(){
   else if (playing >= 0){ lastProg = Date.now(); play(playing); }
 });
 
+/* ---------- Verlauf (Zurueck-Taste) ---------- */
+var pushedFull = false, pushedSet = false;
+function pushHash(h){
+  if (location.hash === '#' + h) return false;
+  var before = history.length;
+  location.hash = h;
+  return history.length > before;
+}
+function popHash(pushed){
+  if (pushed) history.back();
+  else history.replaceState(null, '', location.pathname + location.search);
+}
+
 /* ---------- Bedienung ---------- */
 function ok(){
   if (playing === sel && playing >= 0) enterFull();
@@ -604,7 +617,7 @@ function ok(){
 function enterFull(){
   if (playing < 0 || mode === 'full') return;
   mode = 'full'; document.body.classList.add('full'); updateSel();
-  if (location.hash !== '#full') location.hash = 'full';
+  pushedFull = pushHash('full');
   if (!IS_APP){
     var de = document.documentElement, rf = de.requestFullscreen || de.webkitRequestFullscreen;
     if (rf && !(document.fullscreenElement || document.webkitFullscreenElement)){
@@ -622,7 +635,8 @@ function exitFull(fromHash){
     var ef = document.exitFullscreen || document.webkitExitFullscreen;
     try{ var pr = ef && ef.call(document); if (pr && pr.catch) pr.catch(function(){}); }catch(e){}
   }
-  if (!fromHash && location.hash === '#full') history.back();
+  if (!fromHash && location.hash === '#full') popHash(pushedFull);
+  pushedFull = false;
 }
 function onFsChange(){ if (!(document.fullscreenElement || document.webkitFullscreenElement) && mode === 'full') exitFull(false); }
 document.addEventListener('fullscreenchange', onFsChange);
@@ -728,7 +742,7 @@ function openSettings(firstRun){
   mode = 'settings'; updateSel();
   sCatsBefore = JSON.stringify(cfg.cats || []);
   $('settings').classList.add('show');
-  setTimeout(function(){ if (location.hash !== '#set') location.hash = 'set'; }, 0);
+  setTimeout(function(){ if (mode === 'settings') pushedSet = pushHash('set'); }, 0);
   $('sSub').innerHTML = firstRun === 'login'
     ? '<span class="warn">Zugang fehlt.</span> Unten bei „Zugang (IPTV-Konto)“ Benutzer und Passwort eingeben, dann „Zugang speichern und neu laden“.'
     : firstRun
@@ -762,7 +776,11 @@ function buildSettings(){
   h.push('<div class="si btn2" data-a="acc">Zugang speichern und neu laden</div>');
   box.innerHTML = h.join('');
   sItems = Array.prototype.slice.call(box.querySelectorAll('.si')).filter(function(el){ return el.getAttribute('data-a') !== 'none'; });
-  sItems.forEach(function(el, i){ el.addEventListener('click', function(){ si = i; sFocus(); sAct(); }); });
+  sItems.forEach(function(el, i){ el.addEventListener('click', function(e){
+    si = i; sFocus();
+    if (e.target && e.target.tagName === 'INPUT') return;
+    sAct();
+  }); });
   si = Math.min(si, sItems.length - 1); if (si < 0) si = 0;
   if (!cfg.user || !cfg.pass){ for (var k = 0; k < sItems.length; k++) if (sItems[k].querySelector('#fU')) si = k; }
   sFocus();
@@ -785,7 +803,7 @@ function sAct(){
     if (k >= 0) list.splice(k, 1); else list.push(id);
     cfg.cats = list; el.classList.toggle('on', k < 0);
   }
-  else if (a === 'in'){ var inp = el.querySelector('input'); if (document.activeElement === inp) inp.blur(); else inp.focus(); }
+  else if (a === 'in'){ var inp = el.querySelector('input'); inp.focus(); try{ inp.click(); inp.setSelectionRange(inp.value.length, inp.value.length); }catch(x){} }
   else if (a === 'acc'){
     cfg.server = $('fS').value.trim(); cfg.user = $('fU').value.trim(); cfg.pass = $('fP').value.trim(); cfg.backups = [];
     cfg.cats = null; allCats = null; saveCfg();
@@ -796,7 +814,7 @@ function sAct(){
 }
 function settingsKey(K){
   var inInput = document.activeElement && document.activeElement.tagName === 'INPUT';
-  if (inInput && (K === 'left' || K === 'right' || (K.charAt(0) === 'd' && K.length === 2))) return false;
+  if (inInput) return false;
   if (K === 'up' || K === 'down'){
     if (inInput) document.activeElement.blur();
     si = Math.max(0, Math.min(sItems.length - 1, si + (K === 'up' ? -1 : 1))); sFocus(); return true;
@@ -811,7 +829,8 @@ function closeSettings(fromHash, skipReload){
   saveCfg();
   $('settings').classList.remove('show');
   mode = 'list'; updateSel();
-  if (!fromHash && location.hash === '#set') history.back();
+  if (!fromHash && location.hash === '#set') popHash(pushedSet);
+  pushedSet = false;
   if (!skipReload && JSON.stringify(cfg.cats || []) !== sCatsBefore){ channels = []; render(); loadChannels(); }
 }
 
