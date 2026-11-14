@@ -373,7 +373,9 @@ function loadChannels(){
       loadChannels(); return;
     }
     loadChannels.sw = 0;
-    if (!channels.length) listMsg(t('net'));
+    var why = (e && e.message) || String(e);
+    var diag = '<br><small style="opacity:.7">' + esc(base()) + ' · ' + esc(cfg.user || '–') + ' · ' + esc(why) + ' · ' + location.protocol.replace(':', '') + '</small>';
+    if (!channels.length) listMsg(t('net') + diag);
     else toast(t('net'));
     loadChannels.r = setTimeout(loadChannels, 20000);
   });
